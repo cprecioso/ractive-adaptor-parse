@@ -7,10 +7,11 @@ Use Parse objects in your [Ractive] components.
 
 ## Installation
 
-Include `ractive-adaptors-parse.min.js` on your page below Ractive, e.g:
+Include `ractive-adaptors-parse.min.js` on your page below Ractive. It's also recommended you use [ractive-adaptors-promise], but it is optional.
 
 ```html
 <script src='lib/ractive.min.js'></script>
+<script src='lib/ractive-adaptors-promise.min.js'></script> <!-- Optional -->
 <script src='lib/ractive-adaptors-parse.min.js'></script>
 ```
 
@@ -36,12 +37,15 @@ If you're using `<script>` tags to manage your dependencies, everything is alrea
 
 ```js
 var user = new Parse.User.current();
+var anotherUser = new Parse.User.createWithoutData("xxxxxxx");
 
 var ractive = new Ractive({
   el: 'main',
-  template: '<h1>Hello {{user.username}}!</h1>',
+  template: '<h1>Hello {{user.username}}, you have a friend request from {{anotherUser.username}}!</h1>',
+  adapt: [ "Parse", "Promise" ] // The promise adaptor is optional but highly recommended.
   data: {
-    user: user
+    user: user,
+    anotherUser: anotherUser.fetch() // Only if you've also included the Promise adaptor. Otherwise, you're on your own with promises.
   }
 });
 
@@ -90,3 +94,4 @@ ISC
 [#1]: https://github.com/cprecioso/ractive-adaptors-parse/issues/1
 [#4]: https://github.com/cprecioso/ractive-adaptors-parse/issues/4
 [ractive-adaptors-backbone]: https://github.com/ractivejs/ractive-adaptors-backbone
+[ractive-adaptors-promise]: https://github.com/lluchs/Ractive-adaptors-Promise
