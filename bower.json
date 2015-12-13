@@ -1,0 +1,21 @@
+{
+	"name": "ractive-adaptors-parse",
+	"description": "Parse adaptor for Ractive.js",
+	"version": "0.1.0",
+	"author": "Carlos Precioso",
+	"license": "ISC",
+	"main": "dist/ractive-adaptors-parse.js",
+	"ignore": [
+		"**/.*",
+		"src"
+	],
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/cprecioso/ractive-adaptors-parse.git"
+	},
+	"keywords": [
+		"parse",
+		"parse.com",
+		"ractive"
+	]
+}

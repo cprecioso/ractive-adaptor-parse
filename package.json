@@ -1,0 +1,44 @@
+{
+  "name": "ractive-adaptors-parse",
+  "version": "0.1.0",
+  "description": "Parse adaptor for Ractive.js",
+  "author": "Carlos Precioso",
+	"keywords": [
+		"parse",
+		"parse.com",
+		"ractive"
+	],
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/cprecioso/ractive-adaptor-parse.git",
+    "web": "https://github.com/cprecioso/ractive-adaptor-parse"
+  },
+  "bugs": {
+    "url": "https://github.com/cprecioso/ractive-adaptor-parse/issues/"
+  },
+  "main": "dist/ractive-adaptors-parse.js",
+  "scripts": {
+    "build": "rm -rf dist/; mkdir dist; browserify -s \"ractive-adaptors-parse\" src/ractive-adaptors-parse.coffee > dist/ractive-adaptors-parse.js",
+		"prepublish": "npm run build; uglifyjs -m < dist/ractive-adaptors-parse.js > dist/ractive-adaptors-parse.min.js"
+  },
+  "browserify": {
+    "transform": [
+      "coffeeify",
+      "browserify-shim"
+    ]
+  },
+  "browserify-shim": {
+    "parse": "global:Parse",
+    "ractive": "global:Ractive"
+  },
+  "license": "ISC",
+	"dependencies": {
+    "browserify": "^12.0.1",
+    "browserify-shim": "^3.8.11",
+    "coffeeify": "^2.0.1"
+	},
+  "devDependencies": {
+    "coffee-script": "^1.10.0",
+    "uglify-js": "^2.6.1"
+  }
+}
