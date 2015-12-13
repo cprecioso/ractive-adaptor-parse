@@ -14,7 +14,7 @@ Include `ractive-adaptors-parse.min.js` on your page below Ractive, e.g:
 <script src='lib/ractive-adaptors-parse.min.js'></script>
 ```
 
-To get ractive-adaptors-backbone you can:
+To get ractive-adaptors-parse you can:
 
 #### Use bower
 
@@ -23,7 +23,8 @@ To get ractive-adaptors-backbone you can:
 
 #### Use npm
 
-    $ npm install --save ractive-adaptors-parse
+    $ npm install --save cprecioso/ractive-adaptors-parse
+    # ractive-adaptors-parse is in alpha and is not yet in the npm registry
 
 #### Download
 
@@ -66,13 +67,26 @@ var ractive = new Ractive({
   },
 
   // this line tells Ractive to look out
-  // for Backbone models
+  // for Parse models
   adapt: [ parseAdaptor ]
 });
 ```
+
+## About
+This code extends the `Parse.Object.set` prototype, so each time it's called and the Object ID has been added to a Ractive instance, Ractive will get a notification. The prototype modification should be fine, but proceed with caution.
+
+A cool thing we get by modifying the prototype is that if you create another instance of the object anywhere else in your code, any change made there will be reflected in your Ractive instance. If you don't want this feature or don't want the adaptor to modify the prototype, in the future it will be possible to disable this behaviour. Keep an eye on [#4].
+
+It supports two-way binding, but `.save()`-ing is still your responsibility. For the moment, the adaptor doesn't update the data if it's rewritten by `.fetch()`. This will change in the future, keep an eye on [#1].
+
+## Credits
+Thank you to [ractive-adaptors-backbone], as their code guided mine. 
 
 ## License
 
 ISC
 
 [Ractive]: http://www.ractivejs.org
+[#1]: https://github.com/cprecioso/ractive-adaptors-parse/issues/1
+[#4]: https://github.com/cprecioso/ractive-adaptors-parse/issues/4
+[ractive-adaptors-backbone]: https://github.com/ractivejs/ractive-adaptors-backbone
