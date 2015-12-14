@@ -300,80 +300,103 @@ function isUndefined(arg) {
 
 },{}],2:[function(require,module,exports){
 (function (global){
-var EventEmitter, Ractive, WrappedParseObject, adaptor, eventManager, initKey, previousSet, ref;
+var EventEmitter, Parse, Ractive, WrappedParseObject, adaptor, eventManager, ref;
 
 Ractive = (typeof window !== "undefined" ? window['Ractive'] : typeof global !== "undefined" ? global['Ractive'] : null);
+
+Parse = (typeof window !== "undefined" ? window['Parse'] : typeof global !== "undefined" ? global['Parse'] : null);
 
 EventEmitter = require("events");
 
 eventManager = new EventEmitter();
 
-initKey = "__ractiveParseAdaptor__initialized__";
-
-previousSet = function() {};
-
 module.exports = adaptor = {
-  Parse: (typeof window !== "undefined" ? window['Parse'] : typeof global !== "undefined" ? global['Parse'] : null) || null,
-  init: function() {
-    var ref, ref1, ref2;
-    if (((ref = this.Parse) != null ? (ref1 = ref.Object) != null ? (ref2 = ref1.prototype) != null ? ref2.set : void 0 : void 0 : void 0) == null) {
-      throw new Error("Could not find Parse. You must do `adaptor.Parse = Parse` - see https://github.com/cprecioso/ractive-adaptor-ractive#installation for more information");
-    }
-    if (this.Parse[initKey]) {
-      return;
-    }
-    previousSet = Parse.Object.prototype.set;
-    Parse.Object.prototype.set = function(key, value, options) {
-      var retVal;
-      retVal = previousSet.apply(this, arguments);
-      if (!!retVal) {
-        eventManager.emit(this.className + "-" + this.id, key, value);
-      }
-      return retVal;
-    };
-    return this.Parse[initKey] = true;
-  },
+  Parse: Parse = (typeof window !== "undefined" ? window['Parse'] : typeof global !== "undefined" ? global['Parse'] : null) || null,
   filter: function(obj) {
-    var ref, ref1, ref2;
-    if (((ref = this.Parse) != null ? (ref1 = ref.Object) != null ? (ref2 = ref1.prototype) != null ? ref2.set : void 0 : void 0 : void 0) == null) {
+    var ref;
+    if (((ref = this.Parse) != null ? ref.Object : void 0) == null) {
       throw new Error("Could not find Parse. You must do `adaptor.Parse = Parse` - see https://github.com/cprecioso/ractive-adaptor-ractive#installation for more information");
     }
+    Parse = this.Parse;
     return obj instanceof this.Parse.Object;
   },
   wrap: function(ractive, object, keypath, prefixer) {
-    this.init();
     return new WrappedParseObject(ractive, object, keypath, prefixer);
   }
 };
 
 WrappedParseObject = (function() {
-  function WrappedParseObject(ractive, object1, keypath, prefixer) {
+
+  /* Methods to replace */
+  var eventListener, wrappedFetch, wrappedSet;
+
+  wrappedSet = function(key, value) {
+    var retVal;
+    retVal = Parse.Object.prototype.set.apply(this, arguments);
+    if (!!retVal) {
+      eventManager.emit(this.className + "-" + this.id, this, key);
+    }
+    return retVal;
+  };
+
+  wrappedFetch = function(target, forceFetch, options) {
+    return this._fetch.apply(this, arguments).then(function(object) {
+      eventManager.emit(object.className + "-" + object.id, target, false);
+      return user;
+    });
+  };
+
+  eventListener = function(ractive, keypath, prefixer, desiredTarget) {
+    return (function(_this) {
+      return function(target, key) {
+        var obj1;
+        if (target === desiredTarget) {
+          if (key === false) {
+            return ractive.update(keypath);
+          } else {
+            return ractive.set(prefixer((
+              obj1 = {},
+              obj1["" + key] = target.get("key"),
+              obj1
+            )));
+          }
+        }
+      };
+    })(this);
+  };
+
+
+  /* Wrap Parse Object */
+
+  function WrappedParseObject(ractive1, object1, keypath, prefixer) {
+    var objectController;
+    this.ractive = ractive1;
     this.object = object1;
-    this.listener = [
-      this.object.className + "-" + this.object.id, (function(ractive, prefixer) {
-        return function(key, value) {
-          var obj1;
-          return ractive.set(prefixer((
-            obj1 = {},
-            obj1["" + key] = value,
-            obj1
-          )));
-        };
-      })(ractive, prefixer)
-    ];
+    this.object.set = wrappedSet;
+    objectController = Parse.CoreManager.getObjectController();
+    if (!objectController.ractiveParseWrapper) {
+      objectController._fetch = objectController.fetch;
+      objectController.fetch = wrappedFetch;
+      objectController.ractiveParseWrapper = true;
+    }
+    this.listener = [this.object.className + "-" + this.object.id, eventListener(this.ractive, keypath, prefixer, this.object)];
     eventManager.addListener.apply(eventManager, this.listener);
   }
+
+
+  /* Ractive Wrapper methods */
 
   WrappedParseObject.prototype.get = function() {
     return this.object.attributes;
   };
 
   WrappedParseObject.prototype.set = function(key, value) {
-    return previousSet.call(this.object, key, value);
+    return Parse.Object.prototype.set.apply(this.object, arguments);
   };
 
   WrappedParseObject.prototype.teardown = function() {
-    return eventManager.removeListener.apply(eventManager, this.listener);
+    eventManager.removeListener.apply(eventManager, this.listener);
+    return delete this.object.set;
   };
 
   WrappedParseObject.prototype.reset = function() {

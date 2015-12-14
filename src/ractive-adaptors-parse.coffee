@@ -16,30 +16,30 @@ module.exports = adaptor =
 
 class WrappedParseObject
 	### Methods to replace ###
-	wrappedSet: (key, value) ->
+	wrappedSet = (key, value) ->
 		retVal = Parse.Object::set.apply @, arguments
 		if !!retVal
 			eventManager.emit(@className + "-" + @id, @, key)
 		return retVal
 	
-	wrappedFetch: (target, forceFetch, options) ->
+	wrappedFetch = (target, forceFetch, options) ->
 		@_fetch.apply @, arguments
 		.then (object) ->
 			eventManager.emit(object.className + "-" + object.id, target, false)
 			return user
 	
-	eventListener: (ractive, prefixer, desiredTarget) -> (target, key) => if target is desiredTarget
-		ractive.set prefixer if key is false
-				@::get.apply target
-			else "#{key}": target.get "key"
+	eventListener = (ractive, keypath, prefixer, desiredTarget) -> (target, key) => if target is desiredTarget
+		if key is false
+			 ractive.update keypath
+		else ractive.set prefixer "#{key}": target.get "key"
 	
 	### Wrap Parse Object ###
 	constructor: (@ractive, @object, keypath, prefixer) ->
-		object.set = @::wrappedSet
+		@object.set = wrappedSet
 		objectController = Parse.CoreManager.getObjectController()
 		unless objectController.ractiveParseWrapper
 			objectController._fetch = objectController.fetch
-			objectController.fetch = @::wrappedFetch
+			objectController.fetch = wrappedFetch
 			objectController.ractiveParseWrapper = true
 		
 		@listener = [
