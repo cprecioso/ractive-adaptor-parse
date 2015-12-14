@@ -9,8 +9,8 @@ module.exports = adaptor =
 		
 		filter: (obj) ->
 			throw new Error "Could not find Parse. You must do `adaptor.Parse = Parse` - see https://github.com/cprecioso/ractive-adaptor-ractive#installation for more information" unless @Parse?.Object?
-			obj instanceof @Parse.Object
 			Parse = @Parse
+			obj instanceof @Parse.Object
 		wrap: (ractive, object, keypath, prefixer) ->
 			new WrappedParseObject ractive, object, keypath, prefixer
 
@@ -24,7 +24,9 @@ class WrappedParseObject
 	
 	wrappedFetch: (target, forceFetch, options) ->
 		@_fetch.apply @, arguments
-		.then -> eventManager.emit(@className + "-" + @id, target, false)
+		.then (object) ->
+			eventManager.emit(object.className + "-" + object.id, target, false)
+			return user
 	
 	eventListener: (ractive, prefixer, desiredTarget) -> (target, key) => if target is desiredTarget
 		ractive.set prefixer if key is false
@@ -34,7 +36,7 @@ class WrappedParseObject
 	### Wrap Parse Object ###
 	constructor: (@ractive, @object, keypath, prefixer) ->
 		object.set = @::wrappedSet
-		objectController = @Parse.CoreManager.getObjectController()
+		objectController = Parse.CoreManager.getObjectController()
 		unless objectController.ractiveParseWrapper
 			objectController._fetch = objectController.fetch
 			objectController.fetch = @::wrappedFetch
@@ -42,13 +44,13 @@ class WrappedParseObject
 		
 		@listener = [
 			@object.className + "-" + @object.id,
-			@eventListener ractive, prefixer, @object
+			eventListener @ractive, keypath, prefixer, @object
 		]
 		eventManager.addListener @listener...
 	
 	### Ractive Wrapper methods ###
 	get: -> @object.attributes
-	set: (key, value) -> previousSet.call @object, key, value
+	set: (key, value) -> Parse.Object::set.apply @object, arguments
 	teardown: ->
 		eventManager.removeListener @listener...
 		delete @object.set
