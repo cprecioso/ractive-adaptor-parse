@@ -22,6 +22,10 @@ class WrappedParseObject
 			eventManager.emit(@className + "-" + @id, @, key)
 		return retVal
 	
+	wrappedFetch: (target, forceFetch, options) ->
+		@_fetch.apply @, arguments
+		.then -> eventManager.emit(@className + "-" + @id, target, false)
+	
 	eventListener: (ractive, prefixer, desiredTarget) -> (target, key) => if target is desiredTarget
 		ractive.set prefixer if key is false
 				@::get.apply target
@@ -30,6 +34,11 @@ class WrappedParseObject
 	### Wrap Parse Object ###
 	constructor: (@ractive, @object, keypath, prefixer) ->
 		object.set = @::wrappedSet
+		objectController = @Parse.CoreManager.getObjectController()
+		unless objectController.ractiveParseWrapper
+			objectController._fetch = objectController.fetch
+			objectController.fetch = @::wrappedFetch
+			objectController.ractiveParseWrapper = true
 		
 		@listener = [
 			@object.className + "-" + @object.id,
