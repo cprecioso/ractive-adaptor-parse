@@ -1,6 +1,6 @@
 # ractive-adaptors-parse
 
-Use Parse objects in your [Ractive] components.
+Use Parse objects in your [Ractive] components. Supports two-way binding.
 
 *Find more Ractive.js plugins at
 [docs.ractivejs.org/latest/plugins](http://docs.ractivejs.org/latest/plugins)*
@@ -49,7 +49,7 @@ var ractive = new Ractive({
   }
 });
 
-// If you interact with the model, the view will change
+// If you interact with the model, the view will change. Saving is still your responsibility.
 user.set( 'username', 'everybody' );
 ```
 
@@ -80,8 +80,6 @@ var ractive = new Ractive({
 This code extends the `Parse.Object.set` prototype, so each time it's called and the Object ID has been added to a Ractive instance, Ractive will get a notification. The prototype modification should be fine, but proceed with caution.
 
 A cool thing we get by modifying the prototype is that if you create another instance of the object anywhere else in your code, any change made there will be reflected in your Ractive instance. If you don't want this feature or don't want the adaptor to modify the prototype, in the future it will be possible to disable this behaviour. Keep an eye on [#4].
-
-It supports two-way binding, but `.save()`-ing is still your responsibility. For the moment, the adaptor doesn't update the data if it's rewritten by `.fetch()`. This will change in the future, keep an eye on [#1].
 
 ## Credits
 Thank you to [ractive-adaptors-backbone], as their code guided mine. 
