@@ -76,11 +76,6 @@ var ractive = new Ractive({
 });
 ```
 
-## About
-This code extends the `Parse.Object.set` prototype, so each time it's called and the Object ID has been added to a Ractive instance, Ractive will get a notification. The prototype modification should be fine, but proceed with caution.
-
-A cool thing we get by modifying the prototype is that if you create another instance of the object anywhere else in your code, any change made there will be reflected in your Ractive instance. If you don't want this feature or don't want the adaptor to modify the prototype, in the future it will be possible to disable this behaviour. Keep an eye on [#4].
-
 ## Credits
 Thank you to [ractive-adaptors-backbone], as their code guided mine. 
 

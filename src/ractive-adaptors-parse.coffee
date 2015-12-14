@@ -3,43 +3,46 @@ Parse = require("parse")
 EventEmitter = require "events"
 
 eventManager = new EventEmitter()
-initKey = "__ractiveParseAdaptor__initialized__"
-previousSet = ->
 
 module.exports = adaptor =
-		
-		init: ->
-			throw new Error "Could not find Parse. You must do `adaptor.Parse = Parse` - see https://github.com/cprecioso/ractive-adaptor-ractive#installation for more information" unless @Parse?.Object?.prototype?.set?
-			return if @Parse[initKey]
-			previousSet = Parse.Object.prototype.set
-			Parse.Object.prototype.set = (key, value, options) ->
-				retVal = previousSet.apply @, arguments
-				if !!retVal
-					eventManager.emit(@className + "-" + @id, key, value)
-				return retVal
-			@Parse[initKey] = true
 		Parse: Parse = require("parse") or null
 		
 		filter: (obj) ->
-			throw new Error "Could not find Parse. You must do `adaptor.Parse = Parse` - see https://github.com/cprecioso/ractive-adaptor-ractive#installation for more information" unless @Parse?.Object?.prototype?.set?
+			throw new Error "Could not find Parse. You must do `adaptor.Parse = Parse` - see https://github.com/cprecioso/ractive-adaptor-ractive#installation for more information" unless @Parse?.Object?
 			obj instanceof @Parse.Object
 			Parse = @Parse
 		wrap: (ractive, object, keypath, prefixer) ->
-			@init()
 			new WrappedParseObject ractive, object, keypath, prefixer
 
 class WrappedParseObject
-	constructor: (ractive, @object, keypath, prefixer) ->
+	### Methods to replace ###
+	wrappedSet: (key, value) ->
+		retVal = Parse.Object::set.apply @, arguments
+		if !!retVal
+			eventManager.emit(@className + "-" + @id, @, key)
+		return retVal
+	
+	eventListener: (ractive, prefixer, desiredTarget) -> (target, key) => if target is desiredTarget
+		ractive.set prefixer if key is false
+				@::get.apply target
+			else "#{key}": target.get "key"
+	
+	### Wrap Parse Object ###
+	constructor: (@ractive, @object, keypath, prefixer) ->
+		object.set = @::wrappedSet
+		
 		@listener = [
 			@object.className + "-" + @object.id,
-			do (ractive, prefixer) ->
-				(key, value) -> ractive.set prefixer "#{key}": value
+			@eventListener ractive, prefixer, @object
 		]
 		eventManager.addListener @listener...
 	
+	### Ractive Wrapper methods ###
 	get: -> @object.attributes
 	set: (key, value) -> previousSet.call @object, key, value
-	teardown: -> eventManager.removeListener @listener...
+	teardown: ->
+		eventManager.removeListener @listener...
+		delete @object.set
 	reset: -> false
 
 require("ractive")?.adaptors.Parse = adaptor
