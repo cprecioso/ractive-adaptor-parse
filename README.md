@@ -1,4 +1,4 @@
-# ractive-adaptors-parse
+# ractive-adaptors-parse - UNMAINTAINED!
 
 Use Parse objects in your [Ractive] components. Supports two-way binding.
 
